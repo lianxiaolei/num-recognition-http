@@ -16,7 +16,7 @@ def run(file_name):
     # regions = cut(img, row_eps=img.shape[1] / 30, col_eps=10, display=True)
     # regions_recognition(regions, 'new_model/Test_CNN_Model.ckpt')
 
-    alg_train_new('model/Test_CNN_Model.ckpt', epoch_time=10, p_keep_conv=0.8, p_keep_hidden=0.6)
+    alg_train_new('model/New_CNN_Model.ckpt', epoch_time=10, p_keep_conv=0.8, p_keep_hidden=1.0)
 
 
 if __name__ == '__main__':

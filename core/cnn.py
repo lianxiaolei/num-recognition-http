@@ -18,9 +18,10 @@ class CNN(object):
         """
         self.w = self._init_weights([3, 3, 1, 32])  # 第一层卷积核大小为3x3,输入一张图,输出32个feature map
         self.w2 = self._init_weights([3, 3, 32, 64])  # 第二层卷积核大小为3x3,输入32个feature map,输出64个feature map
-        self.w3 = self._init_weights([3, 3, 64, 148])  # 第三层卷积核大小为3x3,输入64个feature map,输出148个feature map
-        self.w4 = self._init_weights([148 * 6 * 6, 1000])  # FC 148 * 4 * 4 inputs, 625 outputs
-        self.w_o = self._init_weights([1000, 10])  # FC 625 inputs, 10 outputs (labels)
+        self.w3 = self._init_weights([3, 3, 64, 128])  # 第三层卷积核大小为3x3,输入64个feature map,输出128个feature map
+        self.w4 = self._init_weights([3, 3, 128, 256])
+        self.w5 = self._init_weights([256 * 3 * 3, 512])
+        self.w_o = self._init_weights([512, 10])  # FC 512 inputs, 10 outputs (labels)
         self.batch_size = batch_size
         self.test_size = test_size
         self.sess = tf.Session()  # tensorflow session
@@ -55,24 +56,33 @@ class CNN(object):
         l1 = tf.nn.dropout(l1, p_keep_conv)
 
         # 第二个卷积层
-        l2a = tf.nn.relu(tf.nn.conv2d(l1, self.w2,  # l2a shape=(?, 24, 24, 64)
+        l2a = tf.nn.relu(tf.nn.conv2d(l1, self.w2,
                                       strides=[1, 1, 1, 1], padding='SAME'))
-        l2 = tf.nn.max_pool(l2a, ksize=[1, 2, 2, 1],  # l2 shape=(?, 12, 12, 64)
+        l2 = tf.nn.max_pool(l2a, ksize=[1, 2, 2, 1],
                             strides=[1, 2, 2, 1], padding='SAME')
         l2 = tf.nn.dropout(l2, p_keep_conv)
 
         # 第三个卷积层
-        l3a = tf.nn.relu(tf.nn.conv2d(l2, self.w3,  # l3a shape=(?, 12, 12, 148)
+        l3a = tf.nn.relu(tf.nn.conv2d(l2, self.w3,
                                       strides=[1, 1, 1, 1], padding='SAME'))
-        l3 = tf.nn.max_pool(l3a, ksize=[1, 2, 2, 1],  # l3 shape=(?, 6, 6, 148)
+        l3 = tf.nn.max_pool(l3a, ksize=[1, 2, 2, 1],
                             strides=[1, 2, 2, 1], padding='SAME')
-        # 将所有的feature map合并成一个2048维向量
-        l3 = tf.reshape(l3, [-1, self.w4.get_shape().as_list()[0]])  # reshape to (?, 2048)
         l3 = tf.nn.dropout(l3, p_keep_conv)
+
+        # 第四个卷积层
+        l4a = tf.nn.relu(tf.nn.conv2d(l3, self.w4,
+                                      strides=[1, 1, 1, 1], padding='SAME'))
+        l4 = tf.nn.max_pool(l4a, ksize=[1, 2, 2, 1],
+                            strides=[1, 2, 2, 1], padding='SAME')
+        l4 = tf.nn.dropout(l4, p_keep_conv)
+
+        # 将所有的feature map合并成一个2048维向量
+        l5 = tf.reshape(l4, [-1, self.w5.get_shape().as_list()[0]])  # reshape to (?, 2048)
+        l5 = tf.nn.dropout(l5, p_keep_conv)
         # 后面两层为全连接层
-        l4 = tf.nn.relu(tf.matmul(l3, self.w4))
-        l4 = tf.nn.dropout(l4, p_keep_hidden)
-        out = tf.matmul(l4, self.w_o)
+        l6 = tf.nn.relu(tf.matmul(l5, self.w5))
+        l6 = tf.nn.dropout(l6, p_keep_hidden)
+        out = tf.matmul(l6, self.w_o)
 
         return out
 

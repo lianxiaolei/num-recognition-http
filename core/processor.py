@@ -85,7 +85,7 @@ def alg_train_new(model_name, p_keep_conv=1.0, p_keep_hidden=1.0,
               batch_size=batch_size, test_size=test_size, epoch_time=epoch_time)
     print('CNN has been initialized')
 
-    print('load mnist done')
+    # print('load mnist done')
     print('load extra data')
     X, y = get_new_data('F:/num_ocr')
     X = X / 255.0
