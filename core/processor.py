@@ -70,7 +70,7 @@ def get_new_data(base_path):
 
 
 def alg_train_new(model_name, p_keep_conv=1.0, p_keep_hidden=1.0,
-                  batch_size=128, test_size=256, epoch_time=3):
+                  batch_size=512, test_size=256, epoch_time=3):
     """
     :param model_name:
     :param p_keep_conv:
@@ -86,17 +86,17 @@ def alg_train_new(model_name, p_keep_conv=1.0, p_keep_hidden=1.0,
     print('CNN has been initialized')
 
     # print('load mnist done')
-    print('load extra data')
+    print('load training data')
     X, y = get_new_data('F:/num_ocr')
     X = X / 255.0
     X = X.reshape(-1, 48, 48, 1)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-    print('load extra data done')
-    print('training')
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.05)
+    print('load training data done')
+    print('-' * 30, 'training', '-' * 30)
     import time
     tmp_time = time.time()
     cnn.fit_new(X_train, y_train, X_test, y_test)
-    print('time cost:', time.time() - tmp_time)
+    print('total time cost:', time.time() - tmp_time)
     cnn.save(model_name)
 
 
