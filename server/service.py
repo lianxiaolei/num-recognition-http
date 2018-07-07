@@ -49,7 +49,7 @@ def num_reco():
 
         result = cnn.predict_new(np.array(data))
 
-    except Exception, e:
+    except Exception as e:
         print('repr(e):\t', repr(e))
         print('e.message:\t', e.message)
         print('traceback.format_exc():\n%s' % traceback.format_exc())

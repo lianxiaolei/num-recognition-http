@@ -89,7 +89,9 @@ def alg_train_new(model_name, p_keep_conv=1.0, p_keep_hidden=1.0,
     print('load training data')
     X, y = get_new_data('F:/num_ocr')
     X = X / 255.0
+
     X = X.reshape(-1, 48, 48, 1)
+    # X = X.reshape(-1, 28, 28, 1)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.05)
     print('load training data done')
     print('-' * 30, 'training', '-' * 30)
