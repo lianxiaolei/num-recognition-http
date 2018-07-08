@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import cv2
 from keras.callbacks import *
 from keras.layers import *
@@ -18,11 +20,11 @@ datagen = image.ImageDataGenerator(featurewise_center=False,
                                    featurewise_std_normalization=False,
                                    samplewise_std_normalization=False,
                                    zca_whitening=False,
-                                   rotation_range=0.2,
-                                   width_shift_range=0.3,
-                                   height_shift_range=0.3,
+                                   rotation_range=0.3,
+                                   width_shift_range=0.2,
+                                   height_shift_range=0.2,
                                    shear_range=0.,
-                                   zoom_range=0.3,
+                                   zoom_range=0.2,
                                    channel_shift_range=0.,
                                    fill_mode='nearest',
                                    cval=0.0,
@@ -30,18 +32,19 @@ datagen = image.ImageDataGenerator(featurewise_center=False,
                                    vertical_flip=False,
                                    rescale=1. / 255,
                                    preprocessing_function=None,
-                                   data_format=K.image_data_format(),
+                                   # data_format=K.image_data_format(),
                                    )
 
 train_generator = datagen.flow_from_directory(
-    '/home/lian19931201/datasets/num_ocr',  # this is the target directory
+    '/Users/imperatore/tmp/num_ocr',  # this is the target directory
     target_size=(48, 48),  # all images will be resized to 150x150
-    batch_size=128,
+    batch_size=512,
     class_mode='categorical',
     color_mode='grayscale')  # since we use binary_crossentropy loss, we need binary labels
 
 validation_generator = datagen.flow_from_directory(
-    '/home/lian19931201/datasets/num_ocr',
+    '/Users/imperatore/tmp/nums_classed',
+    # '/Users/imperatore/tmp/num_ocr',
     target_size=(48, 48),
     batch_size=128,
     class_mode='categorical',
@@ -53,14 +56,10 @@ input_tensor = Input((48, 48, 1))
 
 def resnet(input_tensor, units=32, kernel_size=(3, 3)):
     x = input_tensor
-    for i in range(1, 16):
-        x = res_block(x, units, kernel_size=kernel_size)
-        if (not i == 0) and (i % 5 == 0):
-            units = units * 2
-            x = Dense(units, kernel_initializer='he_normal', activation='relu')(x)
-            x = BatchNormalization()(x)
-            x = Dropout(0.1)(x)
-            x = MaxPool2D(pool_size=(2, 2))(x)
+    for i in range(3):
+        x = res_block(x, units * (i + 1), kernel_size=kernel_size)
+        x = MaxPool2D(pool_size=(2, 2))(x)
+        x = Dropout(drop)(x)
     return x
 
 
@@ -89,61 +88,54 @@ def res_block(inpt, units, kernel_size, strides=(1, 1), with_conv_shortcut=False
         return x
 
 
-# x = resnet(input_tensor, units=32, kernel_size=(3,3))
-# # x = inception(input_tensor)
-#
-# x = Flatten()(x)
-# x = Dense(128, kernel_initializer='he_normal')(x)
-# x = BatchNormalization()(x)
-# x = Activation('relu')(x)
-# x = Dropout(0.25)(x)
-# x = Dense(10, kernel_initializer='he_normal', activation='softmax')(x)
-# # print('now x\'s shape:', x.shape)
-#
-# # base_model = Model(input=input_tensor, output=x)
-#
-# model = Model(inputs=input_tensor, outputs=x)
-#
-# model.compile(loss='mean_squared_error', optimizer='adam')
-# print('\n'.join([str(tmp) for tmp in model.layers]))
-# print('model length: %s' % len(model.layers))
-
+drop = 0.1
 input_tensor = Input((48, 48, 1))
 x = input_tensor
 
-x = Conv2D(64, kernel_size=(3, 3), padding='same', strides=(1, 1), activation='relu', name=None)(x)
-x = BatchNormalization(axis=3, name=None)(x)
-x = MaxPool2D(pool_size=(2, 2))(x)
-
-x = Conv2D(128, kernel_size=(3, 3), padding='same', strides=(1, 1), activation='relu', name=None)(x)
-x = BatchNormalization(axis=3, name=None)(x)
-x = MaxPool2D(pool_size=(2, 2))(x)
-
-x = Conv2D(256, kernel_size=(3, 3), padding='same', strides=(1, 1), activation='relu', name=None)(x)
-x = BatchNormalization(axis=3, name=None)(x)
-
-x = MaxPool2D(pool_size=(2, 2))(x)
+# x = Conv2D(32, kernel_size=(3, 3), padding='same', strides=(1, 1), name=None)(x)
+# x = Activation(activation='relu')(x)
+# # x = BatchNormalization(axis=3, name=None)(x)
+# x = MaxPool2D(pool_size=(2, 2))(x)
+# x = Dropout(drop)(x)
+#
+# x = Conv2D(64, kernel_size=(3, 3), padding='same', strides=(1, 1), name=None)(x)
+# x = Activation(activation='relu')(x)
+# # x = BatchNormalization(axis=3, name=None)(x)
+# x = MaxPool2D(pool_size=(2, 2))(x)
+# x = Dropout(drop)(x)
+#
+# x = Conv2D(148, kernel_size=(3, 3), padding='same', strides=(1, 1), name=None)(x)
+# x = Activation(activation='relu')(x)
+# # x = BatchNormalization(axis=3, name=None)(x)
+# x = MaxPool2D(pool_size=(2, 2))(x)
+# x = Dropout(drop)(x)
 
 x = Flatten()(x)
-x = Dense(512, kernel_initializer='he_normal')(x)
-
-x = BatchNormalization()(x)
+x = Dense(1000, kernel_initializer='he_normal')(x)
+# x = BatchNormalization()(x)
 x = Activation('relu')(x)
-x = Dropout(0.2)(x)
+x = Dropout(drop)(x)
 
-x = Dense(10, kernel_initializer='he_normal', activation='softmax')(x)
+x = Dense(10, kernel_initializer='he_normal')(x)
 
 model = Model(inputs=input_tensor, outputs=x)
 
-model.compile(loss='mean_squared_error', optimizer='adam')
+print(model.layers)
+# sys.exit(0)
+
+model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
+# model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 print('\n'.join([str(tmp) for tmp in model.layers]))
 print('model length: %s' % len(model.layers))
 
+early_stopping = EarlyStopping(monitor='val_loss', patience=3)
 model.fit_generator(
     train_generator,
     steps_per_epoch=256,
-    epochs=10,
+    epochs=20,
     validation_data=validation_generator,
-    nb_val_samples=100)
+    nb_val_samples=100,
+    verbose=True,
+    callbacks=[early_stopping])
 
-model.save('resnet_15.h5')  # always save your weights after training or during training
+model.save('resnet3_gen.h5')  # always save your weights after training or during training
