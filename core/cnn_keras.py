@@ -36,15 +36,16 @@ datagen = image.ImageDataGenerator(featurewise_center=False,
                                    )
 
 train_generator = datagen.flow_from_directory(
-    '/Users/imperatore/tmp/num_ocr',  # this is the target directory
-    target_size=(48, 48),  # all images will be resized to 150x150
-    batch_size=512,
+    # '/Users/imperatore/tmp/num_ocr',  # this is the target directory
+    'f:/num_ocr',  # this is the target directory
+    target_size=(48, 48),  # all images will be resized to 48*40
+    batch_size=256,
     class_mode='categorical',
-    color_mode='grayscale')  # since we use binary_crossentropy loss, we need binary labels
+    color_mode='grayscale')
 
 validation_generator = datagen.flow_from_directory(
-    '/Users/imperatore/tmp/nums_classed',
-    # '/Users/imperatore/tmp/num_ocr',
+    # '/Users/imperatore/tmp/nums_classed',
+    'f:/num_ocr',
     target_size=(48, 48),
     batch_size=128,
     class_mode='categorical',
@@ -57,9 +58,9 @@ input_tensor = Input((48, 48, 1))
 def resnet(input_tensor, units=32, kernel_size=(3, 3)):
     x = input_tensor
     for i in range(3):
-        x = res_block(x, units * (i + 1), kernel_size=kernel_size)
-        x = MaxPool2D(pool_size=(2, 2))(x)
+        x = res_block(x, units, kernel_size=kernel_size)
         x = Dropout(drop)(x)
+    x = MaxPool2D(pool_size=(2, 2))(x)
     return x
 
 
@@ -92,23 +93,31 @@ drop = 0.1
 input_tensor = Input((48, 48, 1))
 x = input_tensor
 
-# x = Conv2D(32, kernel_size=(3, 3), padding='same', strides=(1, 1), name=None)(x)
-# x = Activation(activation='relu')(x)
-# # x = BatchNormalization(axis=3, name=None)(x)
-# x = MaxPool2D(pool_size=(2, 2))(x)
-# x = Dropout(drop)(x)
-#
-# x = Conv2D(64, kernel_size=(3, 3), padding='same', strides=(1, 1), name=None)(x)
-# x = Activation(activation='relu')(x)
-# # x = BatchNormalization(axis=3, name=None)(x)
-# x = MaxPool2D(pool_size=(2, 2))(x)
-# x = Dropout(drop)(x)
-#
-# x = Conv2D(148, kernel_size=(3, 3), padding='same', strides=(1, 1), name=None)(x)
-# x = Activation(activation='relu')(x)
-# # x = BatchNormalization(axis=3, name=None)(x)
-# x = MaxPool2D(pool_size=(2, 2))(x)
-# x = Dropout(drop)(x)
+x = Conv2D(32, kernel_size=(3, 3), padding='same', strides=(1, 1), name=None)(x)
+x = Activation(activation='relu')(x)
+# x = BatchNormalization(axis=3, name=None)(x)
+x = MaxPool2D(pool_size=(2, 2))(x)
+x = Dropout(drop)(x)
+
+x = Conv2D(64, kernel_size=(3, 3), padding='same', strides=(1, 1), name=None)(x)
+x = Activation(activation='relu')(x)
+# x = BatchNormalization(axis=3, name=None)(x)
+x = MaxPool2D(pool_size=(2, 2))(x)
+x = Dropout(drop)(x)
+
+x = Conv2D(256, kernel_size=(3, 3), padding='same', strides=(1, 1), name=None)(x)
+x = Activation(activation='relu')(x)
+# x = BatchNormalization(axis=3, name=None)(x)
+x = MaxPool2D(pool_size=(2, 2))(x)
+x = Dropout(drop)(x)
+
+x = Conv2D(512, kernel_size=(3, 3), padding='same', strides=(1, 1), name=None)(x)
+x = Activation(activation='relu')(x)
+# x = BatchNormalization(axis=3, name=None)(x)
+x = MaxPool2D(pool_size=(2, 2))(x)
+x = Dropout(drop)(x)
+
+# x = resnet(x)
 
 x = Flatten()(x)
 x = Dense(1000, kernel_initializer='he_normal')(x)
@@ -138,4 +147,4 @@ model.fit_generator(
     verbose=True,
     callbacks=[early_stopping])
 
-model.save('resnet3_gen.h5')  # always save your weights after training or during training
+model.save('cnn4_gen.h5')  # always save your weights after training or during training
