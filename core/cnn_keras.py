@@ -111,11 +111,11 @@ x = Activation(activation='relu')(x)
 x = MaxPool2D(pool_size=(2, 2))(x)
 x = Dropout(drop)(x)
 
-x = Conv2D(512, kernel_size=(3, 3), padding='same', strides=(1, 1), name=None)(x)
-x = Activation(activation='relu')(x)
-# x = BatchNormalization(axis=3, name=None)(x)
-x = MaxPool2D(pool_size=(2, 2))(x)
-x = Dropout(drop)(x)
+# x = Conv2D(512, kernel_size=(3, 3), padding='same', strides=(1, 1), name=None)(x)
+# x = Activation(activation='relu')(x)
+# # x = BatchNormalization(axis=3, name=None)(x)
+# x = MaxPool2D(pool_size=(2, 2))(x)
+# x = Dropout(drop)(x)
 
 # x = resnet(x)
 
@@ -147,4 +147,4 @@ model.fit_generator(
     verbose=True,
     callbacks=[early_stopping])
 
-model.save('cnn4_gen.h5')  # always save your weights after training or during training
+model.save('cnn3_gen_1.1.h5')  # always save your weights after training or during training
