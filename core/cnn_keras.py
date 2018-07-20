@@ -105,17 +105,17 @@ x = Activation(activation='relu')(x)
 x = MaxPool2D(pool_size=(2, 2))(x)
 x = Dropout(drop)(x)
 
-x = Conv2D(256, kernel_size=(3, 3), padding='same', strides=(1, 1), name=None)(x)
-x = Activation(activation='relu')(x)
-# x = BatchNormalization(axis=3, name=None)(x)
-x = MaxPool2D(pool_size=(2, 2))(x)
-x = Dropout(drop)(x)
-
-# x = Conv2D(512, kernel_size=(3, 3), padding='same', strides=(1, 1), name=None)(x)
+# x = Conv2D(256, kernel_size=(3, 3), padding='same', strides=(1, 1), name=None)(x)
 # x = Activation(activation='relu')(x)
 # # x = BatchNormalization(axis=3, name=None)(x)
 # x = MaxPool2D(pool_size=(2, 2))(x)
 # x = Dropout(drop)(x)
+
+x = Conv2D(512, kernel_size=(3, 3), padding='same', strides=(1, 1), name=None)(x)
+x = Activation(activation='relu')(x)
+# x = BatchNormalization(axis=3, name=None)(x)
+x = MaxPool2D(pool_size=(2, 2))(x)
+x = Dropout(drop)(x)
 
 # x = resnet(x)
 
