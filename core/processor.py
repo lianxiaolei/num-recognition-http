@@ -1,11 +1,38 @@
 # coding: utf-8
 
+import os
+import uuid
 from core.cnn import CNN
 from core.img_process import *
-from tensorflow.examples.tutorials.mnist import input_data
+from core.segmentation import *
 import os
 import cv2
+import numpy as np
+from keras.models import load_model
+from utils.preprocessing import *
 from sklearn.model_selection import train_test_split
+
+
+def cut(img, row_eps, col_eps, display=False):
+    """
+    cut a image
+    :param img:
+    :param row_eps:
+    :param col_eps:
+    :param display:
+    :return:
+    """
+    question_areas = project_cut(img, row_eps, col_eps)
+    # show_all_regions(img, question_areas, layer=1)
+    for k, v in question_areas.items():
+        region_arr = region2ndarray(img, v)
+
+        number_areas = project_cut(
+            region_arr, 0, 0, resize=True, display=display)
+
+        v.sub_regions = number_areas
+
+    return question_areas
 
 
 def save_region_as_jpg(fname, img, region, diastolic=True):
@@ -54,7 +81,7 @@ def get_new_data(base_path):
             # calc += 1
             # if calc > 5000:
             #     print('the %s data is more than 5000' % num)
-                # break
+            # break
 
             fname = os.path.join(base_path, num, jpg)
             pic = read_img(fname, color_inv_norm=False)
@@ -102,7 +129,7 @@ def alg_train_new(model_name, p_keep_conv=1.0, p_keep_hidden=1.0,
     cnn.save(model_name)
 
 
-def num_recognition(img, cnn):
+def num_recognition(img, model):
     """
 
     :param img:
@@ -110,61 +137,62 @@ def num_recognition(img, cnn):
     :return:
     """
     # result = cnn.predict(img)
-    result = cnn.predict_new(img)
+    # result = cnn.predict_new(img)
+    print(np.max(img))
+    # img = 255 - img
+    # img = (img - np.min(img)) / (np.max(img) - np.min(img))
+
+    img = preprocessing(img)
+
+    # plt.imshow(img)
+    # plt.show()
+
+    result = np.argmax(
+        model.predict(
+            np.expand_dims(np.expand_dims(img, -1), 0)))
+
     return result
 
 
-def regions_recognition(regions, model_name):
+def keras_recognition(regions, origin, model_name):
     """
 
     :param img:
-    :param regions:
-    :param model_name:
+    :param model:
     :return:
     """
-    cnn = CNN()
-    cnn.load_session(model_name)
-    rec = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5',
-           '6': '6', '7': '7', '8': '8', '9': '9'}
-
+    model = load_model(model_name)
     for i, question_region in regions.items():
-        question = []
-        stem = []
-        answer = []
-        flag = 0
+        result = list()
+
+        question_x, question_y = question_region.x, question_region.y
         for j, number_region in question_region.get_sub_regions().items():
             # recognize numbers
-            result = num_recognition(number_region.get_img(), cnn)
-            # add the number recognition result to question region
-            regions[i].get_sub_regions()[j].set_recognition(rec[str(result[0])])
+            # number_region.set_img(cut_shape(origin, number_region,
+            #                                 base_coord=(question_region.x, question_region.y),
+            #                                 eps=0))
+            # plt.imshow(cut_shape(origin, number_region, base_coord=(question_region.x, question_region.y)))
+            # plt.show()
 
-            question.append(rec[str(result[0])])
+            num = num_recognition(number_region.get_img(), model)
+            cv2.rectangle(origin, (question_x + number_region.x, question_y + number_region.y),
+                          (question_x + number_region.x + number_region.width,
+                           question_y + number_region.y + number_region.height),
+                          (0, 255, 0), 2)
 
-            if rec[str(result[0])] == '=':
-                flag = 1
-                continue
+            if not os.path.exists('result'):
+                os.mkdir('result')
 
-            if flag == 0:
-                stem.append(rec[str(result[0])])
-            else:
-                answer.append(rec[str(result[0])])
+            st = str(uuid.uuid1())
+            fname = 'result/%s-%s.jpg' % (str(num), st)
 
-            # if rec[str(result[0])] == '=':
-            #     flag = 1
+            cv2.imwrite(fname, number_region.get_img() * 255)
 
-        regions[i].set_recognition(''.join(question))
+            font = cv2.FONT_HERSHEY_PLAIN
+            cv2.putText(origin, str(num), (question_x + number_region.x, question_y + number_region.y),
+                        font, 4, (0, 255, 0), 2)
 
-        stem = ''.join(stem)
-        answer = ''.join(answer)
-        try:
-            regions[i].set_result(eval(stem) == answer)
-            print('reco', 'stem:', stem, 'answer:', answer, 'result:', eval(stem) == eval(answer))
-        except:
-            print('error', 'stem:', stem, 'answer:', answer)
-            # raise ValueError('the recognition is incorrect')
-            pass
-
-    return regions
+    cv2.imwrite('result.jpg', origin)
 
 
 if __name__ == '__main__':
