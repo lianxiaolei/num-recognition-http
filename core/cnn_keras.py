@@ -137,11 +137,11 @@ model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 print('\n'.join([str(tmp) for tmp in model.layers]))
 print('model length: %s' % len(model.layers))
 
-early_stopping = EarlyStopping(monitor='val_loss', patience=3)
+early_stopping = EarlyStopping(monitor='val_loss', patience=30)
 model.fit_generator(
     train_generator,
     steps_per_epoch=256,
-    epochs=20,
+    epochs=256,
     validation_data=validation_generator,
     nb_val_samples=100,
     verbose=True,
